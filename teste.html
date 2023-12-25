@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  bora nessa porra
+  <canvas id="canvas"></canvas>
+  <script>
+    const canvas = document.querySelector('#canvas')
+    const ctx = canvas.getContext('2d')
+    const file = './cnh fisica.png'
+    const image = new Image()
+    image.src = file
+    image.onload = () => {
+      canvas.width = image.width
+      canvas.height = image.height
+      ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
+    }
+
+    canvas.addEventListener('mousedown', () => {
+      console.log('canvasData::', {
+        offsetTop: canvas.offsetTop,
+        offsetLeft: canvas.offsetLeft
+      });
+    })
+  </script>
+</body>
+</html>

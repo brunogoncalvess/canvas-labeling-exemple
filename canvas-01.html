@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body onload="draw()">
+  <canvas></canvas>
+
+  <script>
+    let anima
+    let i = 1
+    let x = 0
+    let y = 0
+    let xEnd = 450
+    let yEnd = 450
+    let isGrowing = true
+
+    const draw = () => {
+      const canvas = document.querySelector('canvas')
+      const ctx = canvas.getContext('2d')
+      canvas.width = 500
+      canvas.height = 500
+      canvas.style.border = '1px solid black'
+
+      const w = canvas.width
+      const h = canvas.height
+
+      if (x < xEnd) {
+        i=1
+        x+=i
+      }
+
+      if (x === xEnd && y < yEnd) {
+        y+=i 
+      }
+
+      if (y === yEnd) {
+        i=-1
+        x+=i
+      }
+
+
+      
+      ctx.fillRect(x, y, 50, 50)
+
+      anima = requestAnimationFrame(draw)
+
+    }
+  </script>
+</body>
+</html>

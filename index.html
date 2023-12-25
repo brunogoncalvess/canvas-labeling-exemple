@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        canvas {
+            border: 1px solid #000;
+        }
+    </style>
+    <title>Image Annotation</title>
+</head>
+<body>
+    <div>
+        <label for="labelInput">Label: </label>
+        <input type="text" id="labelInput">
+        <button onclick="addLabel()">Add Label</button>
+        <button onclick="removeLabel()">Remove Label</button>
+    </div>
+    <canvas id="imageCanvas"></canvas>
+
+    <script>
+        const imageUrl = './cnh fisica.png';
+        const canvas = document.getElementById('imageCanvas');
+        const ctx = canvas.getContext('2d');
+        const labels = [];
+        let selectedLabelIndex = -1;
+        let editingMode = false;
+        let selectedCorner = -1;
+
+        const image = new Image();
+        image.src = imageUrl;
+        image.onload = () => {
+            canvas.width = image.width;
+            canvas.height = image.height;
+            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        };
+
+        let isMouseDown = false;
+        let startX, startY, endX, endY;
+
+        canvas.addEventListener('mousedown', (e) => {
+            const clickX = e.clientX - canvas.offsetLeft;
+            const clickY = e.clientY - canvas.offsetTop;
+
+            // Check if the click is inside an existing label
+            selectedLabelIndex = labels.findIndex(label =>
+                clickX >= label.x &&
+                clickX <= label.x + label.width &&
+                clickY >= label.y &&
+                clickY <= label.y + label.height
+            );
+
+            if (selectedLabelIndex !== -1) {
+                // If inside an existing label, check if clicked on a corner
+                selectedCorner = getClickedCorner(labels[selectedLabelIndex], clickX, clickY);
+
+                if (selectedCorner !== -1) {
+                    // If clicked on a corner, enter editing mode
+                    editingMode = true;
+                    isMouseDown = false;
+                    startX = clickX;
+                    startY = clickY;
+                    drawRect();
+                } else {
+                    // If not clicked on a corner, exit editing mode
+                    editingMode = false;
+                }
+            } else {
+                // If outside a label, start creating a new label
+                isMouseDown = true;
+                startX = clickX;
+                startY = clickY;
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            if (isMouseDown && !editingMode) {
+                // If creating a new label, add it to the list
+                endX = endX || startX;
+                endY = endY || startY;
+
+                const label = {
+                    x: Math.min(startX, endX),
+                    y: Math.min(startY, endY),
+                    width: Math.abs(endX - startX),
+                    height: Math.abs(endY - startY),
+                    text: document.getElementById('labelInput').value,
+                };
+                labels.push(label);
+                isMouseDown = false;
+                drawRect();
+            } else if (isMouseDown && editingMode) {
+                // If dragging an existing label, exit editing mode
+                isMouseDown = false;
+                editingMode = false;
+                drawRect();
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (isMouseDown && !editingMode) {
+                endX = e.clientX - canvas.offsetLeft;
+                endY = e.clientY - canvas.offsetTop;
+                drawRect();
+            } else if (editingMode) {
+                endX = e.clientX - canvas.offsetLeft;
+                endY = e.clientY - canvas.offsetTop;
+
+                if (selectedCorner !== -1) {
+                    // If resizing, update the corresponding corner
+                    const label = labels[selectedLabelIndex];
+                    resizeLabel(label, selectedCorner, endX, endY);
+                } else {
+                    // If dragging, update the label's position
+                    const label = labels[selectedLabelIndex];
+                    label.x += endX - startX;
+                    label.y += endY - startY;
+                }
+
+                startX = endX;
+                startY = endY;
+                drawRect();
+            }
+        });
+
+        function drawRect() {
+            // ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+            labels.forEach((label, index) => {
+                ctx.beginPath();
+                ctx.rect(label.x, label.y, label.width, label.height);
+
+                if (index === selectedLabelIndex && editingMode) {
+                    // Draw editing handles
+                    drawHandles(label);
+                } else {
+                    ctx.strokeStyle = 'red';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
+                    ctx.fillRect(label.x, label.y, label.width, label.height);
+
+                    // Draw label text
+                    ctx.fillStyle = 'black';
+                    ctx.font = '12px Arial';
+                    ctx.fillText(label.text, label.x + 5, label.y + 15);
+                }
+            });
+
+            // Draw current label being selected
+            if (isMouseDown && !editingMode) {
+                ctx.beginPath();
+                ctx.rect(startX, startY, endX - startX, endY - startY);
+                ctx.strokeStyle = 'blue';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+        }
+
+        function addLabel() {
+            if (isMouseDown && !editingMode) {
+                endX = endX || startX;
+                endY = endY || startY;
+
+                const label = {
+                    x: Math.min(startX, endX),
+                    y: Math.min(startY, endY),
+                    width: Math.abs(endX - startX),
+                    height: Math.abs(endY - startY),
+                    text: document.getElementById('labelInput').value,
+                };
+                labels.push(label);
+                isMouseDown = false;
+                drawRect();
+            }
+        }
+
+        function removeLabel() {
+            if (editingMode) {
+                editingMode = false;
+                drawRect();
+            } else if (selectedLabelIndex !== -1) {
+                labels.splice(selectedLabelIndex, 1);
+                selectedLabelIndex = -1;
+                drawRect();
+            }
+        }
+
+        function drawHandles(label) {
+            const handlesSize = 8;
+            const halfSize = handlesSize / 2;
+
+            ctx.fillStyle = 'tomato';
+            ctx.fillRect(label.x - halfSize, label.y - halfSize, handlesSize, handlesSize);
+            ctx.fillRect(label.x + label.width - halfSize, label.y - halfSize, handlesSize, handlesSize);
+            ctx.fillRect(label.x + label.width - halfSize, label.y + label.height - halfSize, handlesSize, handlesSize);
+            ctx.fillRect(label.x - halfSize, label.y + label.height - halfSize, handlesSize, handlesSize);
+
+            ctx.strokeStyle = 'tomato';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(label.x, label.y, label.width, label.height);
+        }
+
+        function getClickedCorner(label, clickX, clickY) {
+            const handlesSize = 8;
+
+            const corners = [
+                { x: label.x, y: label.y },
+                { x: label.x + label.width, y: label.y },
+                { x: label.x + label.width, y: label.y + label.height },
+                { x: label.x, y: label.y + label.height },
+            ];
+
+            for (let i = 0; i < corners.length; i++) {
+                const corner = corners[i];
+                if (clickX >= corner.x - handlesSize && clickX <= corner.x + handlesSize &&
+                    clickY >= corner.y - handlesSize && clickY <= corner.y + handlesSize) {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        function resizeLabel(label, corner, newX, newY) {
+            switch (corner) {
+                case 0: // Top-left
+                    label.width += label.x - newX;
+                    label.height += label.y - newY;
+                    label.x = newX;
+                    label.y = newY;
+                    break;
+                case 1: // Top-right
+                    label.width = newX - label.x;
+                    label.height += label.y - newY;
+                    label.y = newY;
+                    break;
+                case 2: // Bottom-right
+                    label.width = newX - label.x;
+                    label.height = newY - label.y;
+                    break;
+                case 3: // Bottom-left
+                    label.width += label.x - newX;
+                    label.height = newY - label.y;
+                    label.x = newX;
+                    break;
+            }
+        }
+    </script>
+</body>
+</html>

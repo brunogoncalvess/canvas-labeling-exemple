@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+
+  <script>
+    const draw = () => {
+      const canvas = document.querySelector('canvas')
+      const ctx = canvas.getContext('2d')
+
+      canvas.style.border = '1px solid black'
+      const image = new Image()
+      image.src = './cnh fisica.png'
+      image.onload = () => {
+        canvas.height = image.height
+        canvas.width = image.width
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
+      }
+      const w = canvas.width
+      const h = canvas.height
+      let xStart, xEnd, yStart, yEnd
+      let isMouseDown = false
+
+  
+      canvas.addEventListener('mousedown', (e) => {
+        xStart = e.clientX
+        yStart = e.clientY
+        isMouseDown = true
+      })
+
+      canvas.addEventListener('mousemove', (e) => {
+        if (isMouseDown) {
+          xEnd = e.clientX
+          yEnd = e.clientY
+          drawRect()
+        }
+      })
+
+      canvas.addEventListener('mouseup', (e) => {
+        isMouseDown = false
+      })
+
+      const drawRect = () => {
+        ctx.fillStyle = 'rgba(230, 0, 0, 0.1)'
+        ctx.clearRect(0, 0, w, h)
+        ctx.fillRect(xStart, yStart, xEnd - xStart, yEnd - yStart)
+      }
+    }
+  </script>
+</head>
+<body onload="draw()">
+  <canvas></canvas>
+</body>
+</html>
