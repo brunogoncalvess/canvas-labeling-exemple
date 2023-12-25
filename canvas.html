@@ -16,17 +16,18 @@
       image.onload = () => {
         canvas.height = image.height
         canvas.width = image.width
-        ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
+        drawImage()
       }
       const w = canvas.width
       const h = canvas.height
       let xStart, xEnd, yStart, yEnd
       let isMouseDown = false
 
+      const drawImage = () => ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
   
       canvas.addEventListener('mousedown', (e) => {
-        xStart = e.clientX
-        yStart = e.clientY
+        xStart = e.clientX - canvas.offsetLeft
+        yStart = e.clientY - canvas.offsetLeft
         isMouseDown = true
       })
 
@@ -43,8 +44,9 @@
       })
 
       const drawRect = () => {
-        ctx.fillStyle = 'rgba(230, 0, 0, 0.1)'
+        ctx.fillStyle = 'rgba(230, 0, 0, 0.4)'
         ctx.clearRect(0, 0, w, h)
+        drawImage()
         ctx.fillRect(xStart, yStart, xEnd - xStart, yEnd - yStart)
       }
     }
